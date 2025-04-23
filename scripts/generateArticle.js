@@ -7,8 +7,15 @@ const { OpenAI } = require('openai');
 console.log("Version du package OpenAI:", require('openai/package.json').version);
 console.log("Initialisation du client OpenAI...");
 
+// Obtenir la clé API - priorité à la variable d'environnement
+const apiKey = process.env.OPENAI_API_KEY;
+
+// Masquer la clé dans les logs pour la sécurité
+const maskedKey = apiKey.substring(0, 10) + '...' + apiKey.substring(apiKey.length - 5);
+console.log(`Utilisation de la clé API: ${maskedKey}`);
+
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: apiKey
 });
 
 /**
@@ -53,8 +60,9 @@ async function generateArticleContent(filename) {
       }
       
       // Utilisation de l'API OpenAI avec le SDK officiel
+      console.log("Envoi de la requête à l'API OpenAI avec le modèle gpt-4.1...");
       const completion = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo", // Modèle stable, certainement disponible
+        model: "gpt-4.1", // Utilisation du modèle disponible sur votre compte
         messages: [
           { role: "system", content: "Tu es un expert en technologies qui écrit des articles techniques de haute qualité pour un blog spécialisé." },
           { role: "user", content: prompt }

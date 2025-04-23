@@ -22,7 +22,7 @@ async function testOpenAI() {
     
     // Test avec un modèle simple et une requête courte
     const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4.1",
       messages: [
         { role: "user", content: "Dis bonjour en français" }
       ],
