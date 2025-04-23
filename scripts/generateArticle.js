@@ -2,7 +2,6 @@ import {OpenAI} from 'openai';
 
 const fs = require('fs');
 const path = require('path');
-const fetch = require('node-fetch');
 const matter = require('gray-matter');
 
 // Initialiser OpenAI avec la clé API
@@ -32,70 +31,76 @@ function extractInfoFromFilename(filename) {
  * Génère un article en utilisant l'API d'IA
  */
 async function generateArticleContent(filename) {
+  try {
+    const fileInfo = extractInfoFromFilename(path.basename(filename));
+    
+    console.log(`Génération de contenu pour: ${fileInfo.titleFromFilename}`);
+    
+    const prompt = `Écris un article de blog technique détaillé sur "${fileInfo.titleFromFilename}". 
+    L'article doit être structuré avec une introduction, plusieurs sous-parties avec des titres, et une conclusion. 
+    Inclus également 3 à 5 tags pertinents pour cet article.`;
+    
     try {
-        const fileInfo = extractInfoFromFilename(path.basename(filename));
-    
-        console.log(`Génération de contenu pour: ${fileInfo.titleFromFilename}`);
-    
-        const prompt = `Écris un article de blog technique détaillé sur "${fileInfo.titleFromFilename}". 
-        L'article doit être structuré avec une introduction, plusieurs sous-parties avec des titres, et une conclusion. 
-        Inclus également 3 à 5 tags pertinents pour cet article.`;
-    
-        const response = await openai.chat.completions.create({
-            model: "gpt-4.1",
-            messages: [
-                { role: "system", content: "Tu es un expert en technologies qui écrit des articles techniques de haute qualité pour un blog spécialisé." },
-                { role: "user", content: prompt }
-            ],
-            temperature: 0.7,
-            max_tokens: 3000
-        });
-    
-        if (!response.ok) {
-          const errText = await response.text();
-          throw new Error(`Erreur API: ${response.status} ${response.statusText} — ${errText}`);
+      // Utilisation de l'API OpenAI avec le SDK officiel
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4.1",
+        messages: [
+          { role: "system", content: "Tu es un expert en technologies qui écrit des articles techniques de haute qualité pour un blog spécialisé." },
+          { role: "user", content: prompt }
+        ],
+        temperature: 0.7,
+        max_tokens: 3000
+      });
+      
+      // Extraire le contenu généré
+      const generatedContent = completion.choices[0].message.content.trim();
+      
+      // Extraction du titre, résumé et tags à partir du contenu généré
+      const lines = generatedContent.split('\n');
+      const title = lines[0].replace(/^#\s+/, '').trim();
+      
+      // Génère un résumé (premières phrases)
+      const firstParagraph = lines.find(line => line.length > 100) || '';
+      const summary = firstParagraph.substring(0, 150) + '...';
+      
+      // Extraire les tags
+      const tagsLine = generatedContent.match(/tags:.*|Tags:.*|#tags:.*|#Tags:.*/i);
+      let tags = ['développement', 'tech', 'programmation'];
+      
+      if (tagsLine) {
+        const extractedTags = tagsLine[0].replace(/tags:|Tags:|#tags:|#Tags:/i, '').split(',').map(tag => tag.trim());
+        if (extractedTags.length > 0) {
+          tags = extractedTags;
         }
-
-        const data = await response.json();
-        const generatedContent = data.choices[0].message.content.trim();
-    
-        const lines = generatedContent.split('\n');
-        const title = lines[0].replace(/^#\s+/, '').trim();
-    
-        const firstParagraph = lines.find(line => line.length > 100) || '';
-        const summary = firstParagraph.substring(0, 150) + '...';
-    
-        const tagsLine = generatedContent.match(/tags:.*|Tags:.*|#tags:.*|#Tags:.*/i);
-        let tags = ['développement', 'tech', 'programmation'];
-    
-        if (tagsLine) {
-            const extractedTags = tagsLine[0].replace(/tags:|Tags:|#tags:|#Tags:/i, '').split(',').map(tag => tag.trim());
-            if (extractedTags.length > 0) {
-                tags = extractedTags;
-            }
-        }
-    
-        const frontmatter = {
-            title,
-            date: fileInfo.date,
-            summary,
-            tags
-        };
-    
-        const contentWithFrontmatter = matter.stringify(generatedContent, frontmatter);
-    
-        fs.writeFileSync(filename, contentWithFrontmatter);
-        console.log(`Article généré avec succès: ${filename}`);
-    
-        return {
-            title,
-            summary,
-            tags
-        };
+      }
+      
+      // Formate le contenu avec frontmatter YAML
+      const frontmatter = {
+        title,
+        date: fileInfo.date,
+        summary,
+        tags
+      };
+      
+      const contentWithFrontmatter = matter.stringify(generatedContent, frontmatter);
+      
+      // Écriture du fichier
+      fs.writeFileSync(filename, contentWithFrontmatter);
+      console.log(`Article généré avec succès: ${filename}`);
+      
+      return {
+        title,
+        summary,
+        tags
+      };
     } catch (error) {
-        console.error("Erreur lors de la génération de l'article:", error);
-        throw error;
+      console.error("Erreur OpenAI:", error);
+      throw new Error(`Erreur API OpenAI: ${error.message}`);
     }
+  } catch (error) {
+    console.error("Erreur lors de la génération de l'article:", error);
+    throw error;
+  }
 }
 
 /**
@@ -125,9 +130,17 @@ async function main() {
     
     const result = await generateArticleContent(filePath);
     
-    console.log(`::set-output name=title::${result.title}`);
-    console.log(`::set-output name=summary::${result.summary}`);
-    console.log(`::set-output name=tags::${result.tags.join(',')}`);
+    // GitHub Actions - nouvelle syntaxe
+    if (process.env.GITHUB_OUTPUT) {
+      fs.appendFileSync(process.env.GITHUB_OUTPUT, `title=${result.title}\n`);
+      fs.appendFileSync(process.env.GITHUB_OUTPUT, `summary=${result.summary}\n`);
+      fs.appendFileSync(process.env.GITHUB_OUTPUT, `tags=${result.tags.join(',')}\n`);
+    } else {
+      // Ancienne syntaxe pour les environnements sans GITHUB_OUTPUT
+      console.log(`::set-output name=title::${result.title}`);
+      console.log(`::set-output name=summary::${result.summary}`);
+      console.log(`::set-output name=tags::${result.tags.join(',')}`);
+    }
     
   } catch (error) {
     console.error('Erreur:', error);

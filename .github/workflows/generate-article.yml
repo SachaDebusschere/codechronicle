@@ -36,7 +36,7 @@ jobs:
             fi
           done
           
-          echo "::set-output name=empty_files::${empty_files[*]}"
+          echo "empty_files=${empty_files[*]}" >> $GITHUB_OUTPUT
       
       - name: Génération des articles
         id: generate
@@ -55,7 +55,7 @@ jobs:
             results+=("- $filename")
           done
           
-          echo "::set-output name=generated_files::${results[*]}"
+          echo "generated_files=${results[*]}" >> $GITHUB_OUTPUT
       
       - name: Commit et push des changements
         if: steps.generate.outputs.generated_files != ''
