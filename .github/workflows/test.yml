@@ -5,8 +5,8 @@ on:
     # branches: 
     #   - main  # ✅ La branche de destination (celle vers laquelle la PR est faite)
     # types: [opened, synchronize]  # ✅ Déclenchement à l'ouverture ou mise à jour d'une PR
-    paths:
-      - 'blog/**/*.md'  # ✅ Tous les fichiers .md dans les sous-dossiers de blog/
+    # paths:
+    #   - 'blog/**/*.md'  # ✅ Tous les fichiers .md dans les sous-dossiers de blog/
 
 jobs:
   generate-article:
