@@ -1,172 +1,114 @@
+require('dotenv').config({path: '../.env'});
 const fs = require('fs');
 const path = require('path');
-const matter = require('gray-matter');
 const { OpenAI } = require('openai');
 
-// Initialiser OpenAI avec la clé API
-console.log("Version du package OpenAI:", require('openai/package.json').version);
-console.log("Initialisation du client OpenAI...");
-
-// Obtenir la clé API - priorité à la variable d'environnement
-const apiKey = process.env.OPENAI_API_KEY;
-
-// Masquer la clé dans les logs pour la sécurité
-const maskedKey = apiKey.substring(0, 10) + '...' + apiKey.substring(apiKey.length - 5);
-console.log(`Utilisation de la clé API: ${maskedKey}`);
-
+// Initialize OpenAI client
 const openai = new OpenAI({
-  apiKey: apiKey
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 /**
- * Extrait les informations du nom de fichier pour créer un prompt
+ * Generate article content using OpenAI
+ * @param {string} prompt - The prompt for content generation
+ * @returns {Promise<string>} - The generated content
  */
-function extractInfoFromFilename(filename) {
-  const filenameWithoutExt = path.basename(filename, '.md');
-  const parts = filenameWithoutExt.split('-');
-  
-  const dateStr = `${parts[0]}-${parts[1]}-${parts[2]}`;
-  
-  const titleWords = parts.slice(3);
-  const titleFromFilename = titleWords.join(' ').replace(/-/g, ' ');
-  
-  return {
-    date: dateStr,
-    titleFromFilename
-  };
+async function generateContent(prompt) {
+  const response = await openai.chat.completions.create({
+    model: "gpt-4.1",
+    messages: [
+      {
+        role: "system",
+        content: `Create a well-structured article about "${prompt}" with YAML frontmatter. Include:
+        - title: A catchy title
+        - summary: A brief summary (1-2 sentences)
+        - tags: 3-5 relevant tags`
+      },
+      {
+        role: "user",
+        content: `Write an article about "${prompt}".`
+      }
+    ],
+    temperature: 0.7,
+    max_tokens: 1500
+  });
+
+  return response.choices[0].message.content.trim();
 }
 
 /**
- * Génère un article en utilisant l'API d'IA
+ * Save content to file
+ * @param {string} filePath - Path to save the file
+ * @param {string} content - Content to write
  */
-async function generateArticleContent(filename) {
+function saveToFile(filePath, content) {
+  const dir = path.dirname(filePath);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+
+  fs.writeFileSync(filePath, content, 'utf8');
+  console.log(`Saved to ${filePath}`);
+}
+
+/**
+ * Process a markdown file
+ * @param {string} filePath - Path to the markdown file
+ */
+async function processFile(filePath) {
   try {
-    const fileInfo = extractInfoFromFilename(path.basename(filename));
-    
-    console.log(`Génération de contenu pour: ${fileInfo.titleFromFilename}`);
-    
-    const prompt = `Écris un article de blog technique détaillé sur "${fileInfo.titleFromFilename}". 
-    L'article doit être structuré avec une introduction, plusieurs sous-parties avec des titres, et une conclusion. 
-    Inclus également 3 à 5 tags pertinents pour cet article.`;
-    
-    try {
-      console.log("Tentative d'appel à l'API OpenAI...");
-      
-      // Affichage de la clé API (masquée) pour vérifier qu'elle est bien présente
-      if (!process.env.OPENAI_API_KEY) {
-        console.error("ERREUR: Clé API OpenAI non définie!");
-      } else {
-        console.log("Clé API OpenAI présente: " + process.env.OPENAI_API_KEY.substring(0, 3) + "..." + process.env.OPENAI_API_KEY.substring(process.env.OPENAI_API_KEY.length - 4));
-      }
-      
-      // Utilisation de l'API OpenAI avec le SDK officiel
-      console.log("Envoi de la requête à l'API OpenAI avec le modèle gpt-4.1...");
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4.1", // Utilisation du modèle disponible sur votre compte
-        messages: [
-          { role: "system", content: "Tu es un expert en technologies qui écrit des articles techniques de haute qualité pour un blog spécialisé." },
-          { role: "user", content: prompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 2000
-      });
-      
-      // Extraire le contenu généré
-      const generatedContent = completion.choices[0].message.content.trim();
-      
-      // Extraction du titre, résumé et tags à partir du contenu généré
-      const lines = generatedContent.split('\n');
-      const title = lines[0].replace(/^#\s+/, '').trim();
-      
-      // Génère un résumé (premières phrases)
-      const firstParagraph = lines.find(line => line.length > 100) || '';
-      const summary = firstParagraph.substring(0, 150) + '...';
-      
-      // Extraire les tags
-      const tagsLine = generatedContent.match(/tags:.*|Tags:.*|#tags:.*|#Tags:.*/i);
-      let tags = ['développement', 'tech', 'programmation'];
-      
-      if (tagsLine) {
-        const extractedTags = tagsLine[0].replace(/tags:|Tags:|#tags:|#Tags:/i, '').split(',').map(tag => tag.trim());
-        if (extractedTags.length > 0) {
-          tags = extractedTags;
-        }
-      }
-      
-      // Formate le contenu avec frontmatter YAML
-      const frontmatter = {
-        title,
-        date: fileInfo.date,
-        summary,
-        tags
-      };
-      
-      const contentWithFrontmatter = matter.stringify(generatedContent, frontmatter);
-      
-      // Écriture du fichier
-      fs.writeFileSync(filename, contentWithFrontmatter);
-      
-      return {
-        title,
-        summary,
-        tags
-      };
-    } catch (error) {
-      console.error("Erreur OpenAI détaillée:", JSON.stringify(error, null, 2));
-      if (error.status) {
-        console.error(`Status: ${error.status}, Message: ${error.message}`);
-      }
-      throw new Error(`Erreur API OpenAI: ${error.message}`);
-    }
+    // Extract prompt from filename
+    const filename = path.basename(filePath, '.md');
+    const prompt = filename.replace(/-/g, ' ');
+
+    console.log(`Processing ${filePath} with prompt: "${prompt}"`);
+
+    // Generate content
+    const content = await generateContent(prompt);
+
+    // Save to file
+    saveToFile(filePath, content);
+
+    return true;
   } catch (error) {
-    console.error("Erreur lors de la génération de l'article:", error);
-    throw error;
+    console.error(`Error processing ${filePath}:`, error.message);
+    return false;
   }
 }
 
 /**
- * Fonction principale
+ * Main function
  */
 async function main() {
   try {
-    const targetFile = process.argv[2];
-    
-    if (!targetFile) {
-      console.error('Veuillez spécifier un fichier cible');
+    // Define the blog directory
+    const blogDir = path.join(__dirname, '../blog');
+
+    // Read all files in the blog directory
+    const files = fs.readdirSync(blogDir)
+      .filter(file => file.endsWith('.md'))
+      .map(file => path.join(blogDir, file));
+
+    if (files.length === 0) {
+      console.error('No markdown files found in the blog directory.');
       process.exit(1);
     }
-    
-    const filePath = path.resolve(targetFile);
-    
-    if (!fs.existsSync(filePath)) {
-      console.error(`Le fichier ${filePath} n'existe pas`);
-      process.exit(1);
+
+    console.log(`Starting to process ${files.length} file(s)`);
+
+    // Process each file
+    let success = true;
+    for (const file of files) {
+      const result = await processFile(file);
+      if (!result) success = false;
     }
-    
-    const fileContent = fs.readFileSync(filePath, 'utf-8');
-    if (fileContent.trim() !== '') {
-      console.log('Le fichier contient déjà du contenu. Génération ignorée.');
-      process.exit(0);
-    }
-    
-    const result = await generateArticleContent(filePath);
-    
-    // GitHub Actions - nouvelle syntaxe
-    if (process.env.GITHUB_OUTPUT) {
-      fs.appendFileSync(process.env.GITHUB_OUTPUT, `title=${result.title}\n`);
-      fs.appendFileSync(process.env.GITHUB_OUTPUT, `summary=${result.summary}\n`);
-      fs.appendFileSync(process.env.GITHUB_OUTPUT, `tags=${result.tags.join(',')}\n`);
-    } else {
-      // Ancienne syntaxe pour les environnements sans GITHUB_OUTPUT
-      console.log(`::set-output name=title::${result.title}`);
-      console.log(`::set-output name=summary::${result.summary}`);
-      console.log(`::set-output name=tags::${result.tags.join(',')}`);
-    }
-    
+
+    console.log('Processing complete');
   } catch (error) {
-    console.error('Erreur:', error);
+    console.error('Unexpected error:', error);
     process.exit(1);
   }
 }
 
-main(); 
+// Run the main function
+main().then(r => console.log('Done')).catch(e => console.error(e));
