@@ -2,7 +2,8 @@ name: Génération Automatique d'Articles
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: 
+        - main
     types: [opened, synchronize]
     paths:
       - 'blog/**.md'
