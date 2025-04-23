@@ -3,10 +3,10 @@ name: Génération Automatique d'Articles
 on:
   pull_request:
     branches: 
-        - main
-    types: [opened, synchronize]
+      - main  # ✅ La branche de destination (celle vers laquelle la PR est faite)
+    types: [opened, synchronize]  # ✅ Déclenchement à l'ouverture ou mise à jour d'une PR
     paths:
-      - 'blog/**.md'
+      - 'blog/**/*.md'  # ✅ Tous les fichiers .md dans les sous-dossiers de blog/
 
 jobs:
   generate-article:
