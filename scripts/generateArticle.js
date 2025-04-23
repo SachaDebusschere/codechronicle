@@ -4,6 +4,9 @@ const matter = require('gray-matter');
 const { OpenAI } = require('openai');
 
 // Initialiser OpenAI avec la clé API
+console.log("Version du package OpenAI:", require('openai/package.json').version);
+console.log("Initialisation du client OpenAI...");
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });

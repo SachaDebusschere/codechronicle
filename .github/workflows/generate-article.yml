@@ -39,6 +39,14 @@ jobs:
             echo "Les 3 premiers caractères: ${OPENAI_API_KEY:0:3}... et les 4 derniers: ...${OPENAI_API_KEY: -4}"
           fi
       
+      - name: Test de l'API OpenAI
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          echo "Test de communication avec l'API OpenAI..."
+          node scripts/test-openai.js
+          echo "✅ Test OpenAI réussi!"
+      
       - name: Trouver les fichiers markdown vides
         id: find-empty-files
         run: |
@@ -69,7 +77,7 @@ jobs:
           for file in ${{ steps.find-empty-files.outputs.empty_files }}; do
             echo "Génération du contenu pour $file"
             echo "Tentative d'exécution: node scripts/generateArticle.js \"$file\""
-            node scripts/generateArticle.js "$file" || {
+            node --trace-warnings scripts/generateArticle.js "$file" || {
               echo "⚠️ Échec de la génération d'article. Sortie du code avec erreur."
               exit 1
             }
