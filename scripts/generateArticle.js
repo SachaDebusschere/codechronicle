@@ -71,8 +71,6 @@ async function generateArticleContent(filename) {
         max_tokens: 2000
       });
       
-      console.log("Réponse reçue de l'API OpenAI");
-      
       // Extraire le contenu généré
       const generatedContent = completion.choices[0].message.content.trim();
       
@@ -107,7 +105,6 @@ async function generateArticleContent(filename) {
       
       // Écriture du fichier
       fs.writeFileSync(filename, contentWithFrontmatter);
-      console.log(`Article généré avec succès: ${filename}`);
       
       return {
         title,
