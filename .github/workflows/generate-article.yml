@@ -26,6 +26,19 @@ jobs:
         run: |
             npm install
       
+      - name: Vérifier la configuration OpenAI
+        env: 
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          # Vérifier que la clé API est définie
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "❌ La clé API OpenAI n'est pas définie dans les secrets GitHub!"
+            exit 1
+          else
+            echo "✅ La clé API OpenAI est définie."
+            echo "Les 3 premiers caractères: ${OPENAI_API_KEY:0:3}... et les 4 derniers: ...${OPENAI_API_KEY: -4}"
+          fi
+      
       - name: Trouver les fichiers markdown vides
         id: find-empty-files
         run: |
@@ -33,8 +46,15 @@ jobs:
           for file in $(find blog -name "*.md"); do
             if [ ! -s "$file" ] || [ "$(cat "$file" | tr -d '[:space:]')" = "" ]; then
               empty_files+=("$file")
+              echo "Fichier vide trouvé: $file"
             fi
           done
+          
+          if [ ${#empty_files[@]} -eq 0 ]; then
+            echo "Aucun fichier vide trouvé."
+          else
+            echo "Nombre de fichiers vides trouvés: ${#empty_files[@]}"
+          fi
           
           echo "empty_files=${empty_files[*]}" >> $GITHUB_OUTPUT
       
@@ -48,7 +68,11 @@ jobs:
           
           for file in ${{ steps.find-empty-files.outputs.empty_files }}; do
             echo "Génération du contenu pour $file"
-            node scripts/generateArticle.js "$file"
+            echo "Tentative d'exécution: node scripts/generateArticle.js \"$file\""
+            node scripts/generateArticle.js "$file" || {
+              echo "⚠️ Échec de la génération d'article. Sortie du code avec erreur."
+              exit 1
+            }
             
             # Extrait le nom du fichier pour l'affichage
             filename=$(basename "$file")

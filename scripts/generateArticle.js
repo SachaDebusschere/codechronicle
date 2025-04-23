@@ -1,13 +1,12 @@
-import {OpenAI} from 'openai';
-
 const fs = require('fs');
 const path = require('path');
 const matter = require('gray-matter');
+const { OpenAI } = require('openai');
 
 // Initialiser OpenAI avec la clé API
 const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY || ''
-  });
+  apiKey: process.env.OPENAI_API_KEY
+});
 
 /**
  * Extrait les informations du nom de fichier pour créer un prompt
@@ -41,16 +40,27 @@ async function generateArticleContent(filename) {
     Inclus également 3 à 5 tags pertinents pour cet article.`;
     
     try {
+      console.log("Tentative d'appel à l'API OpenAI...");
+      
+      // Affichage de la clé API (masquée) pour vérifier qu'elle est bien présente
+      if (!process.env.OPENAI_API_KEY) {
+        console.error("ERREUR: Clé API OpenAI non définie!");
+      } else {
+        console.log("Clé API OpenAI présente: " + process.env.OPENAI_API_KEY.substring(0, 3) + "..." + process.env.OPENAI_API_KEY.substring(process.env.OPENAI_API_KEY.length - 4));
+      }
+      
       // Utilisation de l'API OpenAI avec le SDK officiel
       const completion = await openai.chat.completions.create({
-        model: "gpt-4.1",
+        model: "gpt-3.5-turbo", // Modèle stable, certainement disponible
         messages: [
           { role: "system", content: "Tu es un expert en technologies qui écrit des articles techniques de haute qualité pour un blog spécialisé." },
           { role: "user", content: prompt }
         ],
         temperature: 0.7,
-        max_tokens: 3000
+        max_tokens: 2000
       });
+      
+      console.log("Réponse reçue de l'API OpenAI");
       
       // Extraire le contenu généré
       const generatedContent = completion.choices[0].message.content.trim();
@@ -94,7 +104,10 @@ async function generateArticleContent(filename) {
         tags
       };
     } catch (error) {
-      console.error("Erreur OpenAI:", error);
+      console.error("Erreur OpenAI détaillée:", JSON.stringify(error, null, 2));
+      if (error.status) {
+        console.error(`Status: ${error.status}, Message: ${error.message}`);
+      }
       throw new Error(`Erreur API OpenAI: ${error.message}`);
     }
   } catch (error) {
