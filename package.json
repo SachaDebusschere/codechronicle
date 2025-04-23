@@ -1,0 +1,27 @@
+{
+  "name": "codechronicle",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SachaDebusschere/codechronicle.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/SachaDebusschere/codechronicle/issues"
+  },
+  "homepage": "https://github.com/SachaDebusschere/codechronicle#readme",
+  "dependencies": {
+    "discord.js": "^14.18.0",
+    "gray-matter": "^4.0.3",
+    "marked": "^15.0.9",
+    "node-fetch": "^2.7.0"
+  }
+}
