@@ -36,7 +36,7 @@ async function generateArticleContent(filename) {
     L'article doit être structuré avec une introduction, plusieurs sous-parties avec des titres, et une conclusion. 
     Inclus également 3 à 5 tags pertinents pour cet article.`;
 
-    const response = await fetch('https://api.openai.com/v1/completions', {
+    const response = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
