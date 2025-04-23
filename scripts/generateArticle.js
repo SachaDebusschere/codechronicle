@@ -5,7 +5,10 @@ const path = require('path');
 const fetch = require('node-fetch');
 const matter = require('gray-matter');
 
-const openaiApiKey = process.env.OPENAI_API_KEY;
+// Initialiser OpenAI avec la clé API
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY || ''
+  });
 
 /**
  * Extrait les informations du nom de fichier pour créer un prompt
@@ -35,23 +38,17 @@ async function generateArticleContent(filename) {
         console.log(`Génération de contenu pour: ${fileInfo.titleFromFilename}`);
     
         const prompt = `Écris un article de blog technique détaillé sur "${fileInfo.titleFromFilename}". 
-    L'article doit être structuré avec une introduction, plusieurs sous-parties avec des titres, et une conclusion. 
-    Inclus également 3 à 5 tags pertinents pour cet article.`;
+        L'article doit être structuré avec une introduction, plusieurs sous-parties avec des titres, et une conclusion. 
+        Inclus également 3 à 5 tags pertinents pour cet article.`;
     
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${openaiApiKey}`
-          },
-          body: JSON.stringify({
-            model: 'gpt-3.5-turbo',
+        const response = await openai.chat.completions.create({
+            model: "gpt-4.1",
             messages: [
-              { role: 'system', content: 'Tu es un assistant qui rédige des articles techniques.' },
-              { role: 'user', content: prompt }
+                { role: "system", content: "Tu es un expert en technologies qui écrit des articles techniques de haute qualité pour un blog spécialisé." },
+                { role: "user", content: prompt }
             ],
-            temperature: 0.7
-          })
+            temperature: 0.7,
+            max_tokens: 3000
         });
     
         if (!response.ok) {
@@ -59,46 +56,46 @@ async function generateArticleContent(filename) {
           throw new Error(`Erreur API: ${response.status} ${response.statusText} — ${errText}`);
         }
 
-    const data = await response.json();
-    const generatedContent = data.choices[0].text.trim();
+        const data = await response.json();
+        const generatedContent = data.choices[0].message.content.trim();
     
-    const lines = generatedContent.split('\n');
-    const title = lines[0].replace(/^#\s+/, '').trim();
+        const lines = generatedContent.split('\n');
+        const title = lines[0].replace(/^#\s+/, '').trim();
     
-    const firstParagraph = lines.find(line => line.length > 100) || '';
-    const summary = firstParagraph.substring(0, 150) + '...';
+        const firstParagraph = lines.find(line => line.length > 100) || '';
+        const summary = firstParagraph.substring(0, 150) + '...';
     
-    const tagsLine = generatedContent.match(/tags:.*|Tags:.*|#tags:.*|#Tags:.*/i);
-    let tags = ['développement', 'tech', 'programmation'];
+        const tagsLine = generatedContent.match(/tags:.*|Tags:.*|#tags:.*|#Tags:.*/i);
+        let tags = ['développement', 'tech', 'programmation'];
     
-    if (tagsLine) {
-      const extractedTags = tagsLine[0].replace(/tags:|Tags:|#tags:|#Tags:/i, '').split(',').map(tag => tag.trim());
-      if (extractedTags.length > 0) {
-        tags = extractedTags;
-      }
+        if (tagsLine) {
+            const extractedTags = tagsLine[0].replace(/tags:|Tags:|#tags:|#Tags:/i, '').split(',').map(tag => tag.trim());
+            if (extractedTags.length > 0) {
+                tags = extractedTags;
+            }
+        }
+    
+        const frontmatter = {
+            title,
+            date: fileInfo.date,
+            summary,
+            tags
+        };
+    
+        const contentWithFrontmatter = matter.stringify(generatedContent, frontmatter);
+    
+        fs.writeFileSync(filename, contentWithFrontmatter);
+        console.log(`Article généré avec succès: ${filename}`);
+    
+        return {
+            title,
+            summary,
+            tags
+        };
+    } catch (error) {
+        console.error("Erreur lors de la génération de l'article:", error);
+        throw error;
     }
-    
-    const frontmatter = {
-      title,
-      date: fileInfo.date,
-      summary,
-      tags
-    };
-    
-    const contentWithFrontmatter = matter.stringify(generatedContent, frontmatter);
-    
-    fs.writeFileSync(filename, contentWithFrontmatter);
-    console.log(`Article généré avec succès: ${filename}`);
-    
-    return {
-      title,
-      summary,
-      tags
-    };
-  } catch (error) {
-    console.error('Erreur lors de la génération de l\'article:', error);
-    throw error;
-  }
 }
 
 /**
