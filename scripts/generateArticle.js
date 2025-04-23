@@ -45,7 +45,7 @@ async function generateArticleContent(filename) {
             'Authorization': `Bearer ${openaiApiKey}`
           },
           body: JSON.stringify({
-            model: 'gpt-4o',
+            model: 'gpt-3.5-turbo',
             messages: [
               { role: 'system', content: 'Tu es un assistant qui rédige des articles techniques.' },
               { role: 'user', content: prompt }
