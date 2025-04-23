@@ -1,3 +1,5 @@
+import {OpenAI} from 'openai';
+
 const fs = require('fs');
 const path = require('path');
 const fetch = require('node-fetch');
@@ -27,30 +29,35 @@ function extractInfoFromFilename(filename) {
  * Génère un article en utilisant l'API d'IA
  */
 async function generateArticleContent(filename) {
-  try {
-    const fileInfo = extractInfoFromFilename(path.basename(filename));
+    try {
+        const fileInfo = extractInfoFromFilename(path.basename(filename));
     
-    console.log(`Génération de contenu pour: ${fileInfo.titleFromFilename}`);
+        console.log(`Génération de contenu pour: ${fileInfo.titleFromFilename}`);
     
-    const prompt = `Écris un article de blog technique détaillé sur "${fileInfo.titleFromFilename}". 
+        const prompt = `Écris un article de blog technique détaillé sur "${fileInfo.titleFromFilename}". 
     L'article doit être structuré avec une introduction, plusieurs sous-parties avec des titres, et une conclusion. 
     Inclus également 3 à 5 tags pertinents pour cet article.`;
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${openaiApiKey}`
-      },
-      body: JSON.stringify({
-        model: "gpt-4.1",
-        prompt: prompt,
-        temperature: 0.7
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Erreur API: ${response.statusText}`);
-    }
+    
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${openaiApiKey}`
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o',
+            messages: [
+              { role: 'system', content: 'Tu es un assistant qui rédige des articles techniques.' },
+              { role: 'user', content: prompt }
+            ],
+            temperature: 0.7
+          })
+        });
+    
+        if (!response.ok) {
+          const errText = await response.text();
+          throw new Error(`Erreur API: ${response.status} ${response.statusText} — ${errText}`);
+        }
 
     const data = await response.json();
     const generatedContent = data.choices[0].text.trim();
