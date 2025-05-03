@@ -145,34 +145,20 @@ jobs:
             count=$(echo "$articles" | jq length)
             
             for i in $(seq 0 $(($count-1))); do
-              title=$(echo "$articles" | jq -r ".[$i].title")
-              summary=$(echo "$articles" | jq -r ".[$i].summary")
+              # Extraire titre et résumé
+              article_data=$(echo "$articles" | jq ".[$i]")
+              title=$(echo "$article_data" | jq -r ".title")
+              summary=$(echo "$article_data" | jq -r ".summary")
               
-              # Créer une version simplifiée du message
-              title_escaped=$(echo "$title" | sed 's/"/\\"/g')
-              summary_escaped=$(echo "$summary" | sed 's/"/\\"/g')
+              echo "Préparation de la notification pour: $title"
               
-              # Créer le JSON avec une syntaxe plus simple
-              cat > discord_payload.json << EOF
-              {
-                "username": "BOT de Springfield",
-                "embeds": [
-                  {
-                    "title": "Nouvel article généré",
-                    "description": "**Titre**: $title_escaped\n\n**Résumé**: $summary_escaped\n\nLe lien de l'article arrive bientôt !",
-                    "color": 8388736,
-                    "footer": {
-                      "text": "Github Actions - Automatisation"
-                    }
-                  }
-                ]
-              }
-              EOF
+              # Créer le payload avec une méthode plus directe
+              echo "{\"username\":\"BOT de Springfield\",\"embeds\":[{\"title\":\"Nouvel article généré\",\"description\":\"**Titre**: ${title}\n\n**Résumé**: ${summary}\n\nLe lien de l'article arrive bientôt !\",\"color\":8388736,\"footer\":{\"text\":\"Github Actions - Automatisation\"}}]}" > payload.json
               
               # Envoyer la notification Discord
-              curl -H "Content-Type: application/json" -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" -d @discord_payload.json
+              curl -H "Content-Type: application/json" -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" -d @payload.json
               
-              echo "Notification Discord envoyée pour l'article: $title"
+              echo "Notification Discord envoyée"
               sleep 1
             done
           else
