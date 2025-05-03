@@ -38,12 +38,6 @@ jobs:
           echo "Contenu du dossier blog :"
           ls -la blog/
           
-          # Vérifier que la clé API est définie
-          if [ -z "$OPENAI_API_KEY" ]; then
-            echo "La clé API OpenAI n'est pas définie"
-            exit 1
-          fi
-          
           # Trouver tous les fichiers .md dans le dossier blog
           for file in blog/*.md; do
             if [ -f "$file" ]; then
