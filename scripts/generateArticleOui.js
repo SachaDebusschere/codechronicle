@@ -37,6 +37,21 @@ async function generateContent(prompt) {
 }
 
 /**
+ * Extract title and summary from content
+ * @param {string} content - The markdown content with frontmatter
+ * @returns {Object} - Object containing title and summary
+ */
+function extractMetadata(content) {
+  const titleMatch = content.match(/title:\s*["']?(.*?)["']?\n/);
+  const summaryMatch = content.match(/summary:\s*["']?(.*?)["']?(\n|$)/);
+  
+  return {
+    title: titleMatch ? titleMatch[1].trim() : "Article sans titre",
+    summary: summaryMatch ? summaryMatch[1].trim() : "Pas de résumé disponible"
+  };
+}
+
+/**
  * Save content to file
  * @param {string} filePath - Path to save the file
  * @param {string} content - Content to write
@@ -54,6 +69,7 @@ function saveToFile(filePath, content) {
 /**
  * Process a markdown file
  * @param {string} filePath - Path to the markdown file
+ * @returns {Promise<Object|null>} - Metadata object or null if failed
  */
 async function processFile(filePath) {
   try {
@@ -65,14 +81,21 @@ async function processFile(filePath) {
 
     // Generate content
     const content = await generateContent(prompt);
-
+    
+    // Extract metadata
+    const metadata = extractMetadata(content);
+    
     // Save to file
     saveToFile(filePath, content);
-
-    return true;
+    
+    // Return metadata with filename for identification
+    return {
+      file: filename,
+      ...metadata
+    };
   } catch (error) {
     console.error(`Error processing ${filePath}:`, error.message);
-    return false;
+    return null;
   }
 }
 
@@ -81,26 +104,40 @@ async function processFile(filePath) {
  */
 async function main() {
   try {
-    // Define the blog directory
+    // Check if a specific file was provided as an argument
+    const specificFile = process.argv[2];
     const blogDir = path.join(__dirname, '../blog');
+    let files = [];
+    let results = [];
 
-    // Read all files in the blog directory
-    const files = fs.readdirSync(blogDir)
-      .filter(file => file.endsWith('.md'))
-      .map(file => path.join(blogDir, file));
+    if (specificFile) {
+      // Process only the specific file
+      files = [specificFile];
+    } else {
+      // Read all files in the blog directory
+      files = fs.readdirSync(blogDir)
+        .filter(file => file.endsWith('.md'))
+        .map(file => path.join(blogDir, file));
+    }
 
     if (files.length === 0) {
-      console.error('No markdown files found in the blog directory.');
+      console.error('No markdown files found to process.');
       process.exit(1);
     }
 
     console.log(`Starting to process ${files.length} file(s)`);
 
     // Process each file
-    let success = true;
     for (const file of files) {
       const result = await processFile(file);
-      if (!result) success = false;
+      if (result) results.push(result);
+    }
+
+    // Write metadata to file for GitHub Action
+    if (results.length > 0) {
+      const metadataPath = path.join(__dirname, '../article-metadata.json');
+      fs.writeFileSync(metadataPath, JSON.stringify(results, null, 2));
+      console.log(`Article metadata saved to ${metadataPath}`);
     }
 
     console.log('Processing complete');
@@ -110,5 +147,10 @@ async function main() {
   }
 }
 
-// Run the main function
-main().then(r => console.log('Done')).catch(e => console.error(e));
+// If this script is run directly
+if (require.main === module) {
+  main().then(() => console.log('Done')).catch(e => console.error(e));
+} else {
+  // Export for use in other scripts
+  module.exports = { processFile, extractMetadata };
+}

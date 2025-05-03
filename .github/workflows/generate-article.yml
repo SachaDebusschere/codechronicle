@@ -56,13 +56,20 @@ jobs:
           # Récupérer la liste des fichiers générés
           generated_files=$(find blog -name "*.md" -type f)
           echo "generated_files=${generated_files}" >> $GITHUB_OUTPUT
+          
+          # Vérifier si le fichier de métadonnées existe
+          if [ -f "article-metadata.json" ]; then
+            echo "metadata_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "metadata_exists=false" >> $GITHUB_OUTPUT
+          fi
       
       - name: Commit et push des changements
         if: steps.generate.outputs.generated_files != ''
         run: |
           git config --local user.email "sacha.debusschere.sd@gmail.com"
           git config --local user.name "Sacha Debusschere"
-          git add blog/
+          git add blog/ article-metadata.json
           git commit -m "Génération automatique d'articles"
           git push
       
@@ -71,25 +78,53 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: articles-generes
-          path: blog/
-
-      - name: Cloner le dépot Github pour ajouter un commentaire sur la PR
-        uses: actions/checkout@v4
-
-      - name : Télécharger l'Artefact stocké
-        uses: actions/download-artifact@v4
-        with:
-          name: articles-generes
-          path: ./blog/
-        
-      - name: Ajouter un commentaire sur la PR
+          path: |
+            blog/
+            article-metadata.json
+      
+      - name: Ajouter un commentaire sur la PR avec les métadonnées
+        if: steps.generate.outputs.metadata_exists == 'true'
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: "Les articles suivants ont été générés : ${{ env.generated_files }}"
-            })
+            const fs = require('fs');
+            
+            try {
+              // Lire le fichier de métadonnées
+              const metadata = JSON.parse(fs.readFileSync('article-metadata.json', 'utf8'));
+              
+              if (metadata && metadata.length > 0) {
+                // Construire le message de commentaire
+                let commentBody = "## Articles générés par l'IA 🤖\n\n";
+                
+                metadata.forEach(article => {
+                  commentBody += `### ${article.title}\n`;
+                  commentBody += `**Résumé**: ${article.summary}\n\n`;
+                  commentBody += `Fichier: \`blog/${article.file}.md\`\n\n`;
+                  commentBody += "---\n\n";
+                });
+                
+                // Ajouter le commentaire à la PR
+                await github.rest.issues.createComment({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: commentBody
+                });
+                
+                console.log('Commentaire ajouté à la PR avec les détails des articles');
+              } else {
+                console.log('Aucune métadonnée d\'article trouvée');
+              }
+            } catch (error) {
+              console.error('Erreur lors de la lecture des métadonnées:', error);
+              
+              // Ajouter un commentaire de secours si les métadonnées ne peuvent pas être lues
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: "Les articles ont été générés, mais les détails n'ont pas pu être récupérés."
+              });
+            }
