@@ -128,3 +128,48 @@ jobs:
                 body: "Les articles ont été générés, mais les détails n'ont pas pu être récupérés."
               });
             }
+            
+      - name: Envoyer les notifications Discord
+        if: steps.generate.outputs.metadata_exists == 'true'
+        run: |
+          # Installer jq si nécessaire
+          if ! command -v jq &> /dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y jq
+          fi
+          
+          # Lire le fichier de métadonnées
+          if [ -f "article-metadata.json" ]; then
+            # Utiliser jq pour traiter le JSON
+            articles=$(cat article-metadata.json)
+            count=$(echo $articles | jq length)
+            
+            for i in $(seq 0 $(($count-1))); do
+              title=$(echo $articles | jq -r ".[$i].title" | sed 's/"/\\"/g')
+              summary=$(echo $articles | jq -r ".[$i].summary" | sed 's/"/\\"/g')
+              filename=$(echo $articles | jq -r ".[$i].file")
+              
+              # Utiliser jq pour créer le JSON et éviter les problèmes d'échappement
+              curl -H "Content-Type: application/json" -X POST ${{ secrets.DISCORD_WEBHOOK_URL }} \
+                -d "$(jq -n \
+                  --arg title "$title" \
+                  --arg summary "$summary" \
+                  '{
+                    username: "BOT de Springfield",
+                    embeds: [{
+                      title: "Nouvel article généré",
+                      description: "**Titre**: " + $title + "\n\n**Résumé**: " + $summary + "\n\nLe lien de l\'article arrive bientôt !",
+                      color: 8388736,
+                      footer: {
+                        text: "Github Actions - Automatisation"
+                      }
+                    }]
+                  }')"
+              
+              # Attendre un peu entre chaque envoi pour éviter les limitations de l'API Discord
+              sleep 1
+            done
+          else
+            echo "Aucun fichier de métadonnées trouvé, impossible d'envoyer les notifications Discord"
+          fi
+      
