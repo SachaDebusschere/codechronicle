@@ -18,6 +18,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
+          fetch-depth: 0
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -28,23 +29,20 @@ jobs:
         run: |
             npm install
       
-      - name: Vérifier le dossier blog
-        run: |
-          if [ ! -d "blog" ]; then
-            echo "Le dossier blog n'existe pas"
-            exit 1
-          fi
-          ls -la blog/
       
       - name: Génération des articles
         id: generate
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
+          echo "Répertoire de travail : $(pwd)"
           echo "Contenu du répertoire courant :"
           ls -la
           echo "Contenu du dossier blog :"
           ls -la blog/
+          
+          # Exécuter le script depuis le répertoire racine
+          cd $GITHUB_WORKSPACE
           node --trace-warnings scripts/generateArticle.js
           
           # Récupérer la liste des fichiers générés
