@@ -31,8 +31,6 @@ jobs:
       
       - name: Génération des articles
         id: generate
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           echo "Répertoire de travail : $(pwd)"
           echo "Contenu du répertoire courant :"
@@ -51,6 +49,8 @@ jobs:
           # Récupérer la liste des fichiers générés
           generated_files=$(find blog -name "*.md" -type f)
           echo "generated_files=${generated_files}" >> $GITHUB_OUTPUT
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       
       - name: Commit et push des changements
         if: steps.generate.outputs.generated_files != ''
