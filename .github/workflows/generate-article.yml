@@ -148,24 +148,29 @@ jobs:
               title=$(echo "$articles" | jq -r ".[$i].title")
               summary=$(echo "$articles" | jq -r ".[$i].summary")
               
-              # Utilisez jq pour créer le payload JSON complet avec échappement automatique
-              payload=$(jq -n \
-                --arg title "$title" \
-                --arg summary "$summary" \
-                '{
-                  username: "BOT de Springfield",
-                  embeds: [{
-                    title: "Nouvel article généré",
-                    description: "**Titre**: " + $title + "\n\n**Résumé**: " + $summary + "\n\nLe lien de l\"article arrive bientôt !",
-                    color: 8388736,
-                    footer: {
-                      text: "Github Actions - Automatisation"
+              # Créer une version simplifiée du message
+              title_escaped=$(echo "$title" | sed 's/"/\\"/g')
+              summary_escaped=$(echo "$summary" | sed 's/"/\\"/g')
+              
+              # Créer le JSON avec une syntaxe plus simple
+              cat > discord_payload.json << EOF
+              {
+                "username": "BOT de Springfield",
+                "embeds": [
+                  {
+                    "title": "Nouvel article généré",
+                    "description": "**Titre**: $title_escaped\n\n**Résumé**: $summary_escaped\n\nLe lien de l'article arrive bientôt !",
+                    "color": 8388736,
+                    "footer": {
+                      "text": "Github Actions - Automatisation"
                     }
-                  }]
-                }')
+                  }
+                ]
+              }
+              EOF
               
               # Envoyer la notification Discord
-              curl -H "Content-Type: application/json" -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" -d "$payload"
+              curl -H "Content-Type: application/json" -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" -d @discord_payload.json
               
               echo "Notification Discord envoyée pour l'article: $title"
               sleep 1
