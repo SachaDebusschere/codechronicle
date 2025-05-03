@@ -1,64 +1,89 @@
 ```yaml
-title: "GitHub pour les débutants : Les bases à connaître en 2025"
-summary: Découvrez les concepts fondamentaux de GitHub, le célèbre outil de gestion de versions, pour bien débuter dans le développement collaboratif en 2025.
+title: "Les bases de GitHub : Démarrer avec la gestion de code en 2025"
+summary: Découvrez les fondamentaux de GitHub au 21 avril 2025 : gestion de versions, collaboration et bonnes pratiques pour bien débuter avec la plateforme incontournable des développeurs.
 tags:
   - GitHub
+  - gestion de version
   - développement collaboratif
-  - gestion de versions
-  - programmation
+  - tutoriel
 ```
 
-# GitHub pour les débutants : Les bases à connaître en 2025
+# Les bases de GitHub : Démarrer avec la gestion de code en 2025
 
-GitHub est devenu un outil incontournable pour les développeurs et les équipes du monde entier. Que vous soyez étudiant, professionnel ou simplement passionné par la programmation, comprendre les bases de GitHub est essentiel pour collaborer efficacement sur des projets de développement logiciel. Dans cet article, nous passerons en revue les principes fondamentaux de GitHub en 2025, pour vous permettre de débuter sereinement.
+GitHub est devenu un outil indispensable pour les développeurs du monde entier. Que vous soyez étudiant, professionnel ou amateur de code, comprendre les bases de GitHub est essentiel pour collaborer efficacement et gérer vos projets. Dans cet article, nous vous guidons à travers les concepts fondamentaux pour bien commencer avec GitHub en 2025.
 
-## 1. Qu’est-ce que GitHub ?
+---
 
-GitHub est une plateforme basée sur le système de gestion de versions **Git**. Elle permet d’héberger du code source, de suivre les modifications, et de collaborer facilement avec d’autres développeurs. Grâce à GitHub, il est possible de travailler à plusieurs sur un même projet, tout en gardant un historique clair et organisé des différentes contributions.
+## 1. Qu'est-ce que GitHub ?
 
-## 2. Les concepts clés à connaître
+GitHub est une plateforme de développement collaboratif basée sur Git, un système de gestion de versions distribué. Elle permet d’héberger du code, de suivre son évolution, de collaborer avec d’autres utilisateurs et de gérer des projets logiciels à toutes les échelles.
 
-### a. Dépôts (Repositories)
+---
 
-Un dépôt (ou *repository*) est un espace de stockage pour votre projet. Il contient tout votre code, ainsi que l’historique des modifications. Les dépôts peuvent être publics (accessibles à tous) ou privés (accessibles uniquement à certaines personnes).
+## 2. Création d’un compte GitHub
 
-### b. Commit et historique
+Pour utiliser GitHub, commencez par créer un compte sur [github.com](https://github.com). Renseignez une adresse email, choisissez un nom d’utilisateur unique et définissez un mot de passe sécurisé. Une fois inscrit, vous aurez accès à votre tableau de bord personnel.
 
-Un **commit** correspond à un point de sauvegarde. Chaque modification apportée au code est enregistrée sous forme de commit, avec un message explicatif. Cela permet de revenir à une version antérieure en cas de problème.
+---
 
-### c. Branches (Branches)
+## 3. Les concepts-clés à connaître
 
-Les **branches** permettent de travailler sur différentes versions du projet en parallèle. Par exemple, vous pouvez créer une branche pour développer une nouvelle fonctionnalité sans impacter la version principale (*main* ou *master*).
+- **Repository (dépôt)** : C’est un espace où sont stockés vos fichiers de projet ainsi que l’historique de leurs modifications.
+- **Commit** : Un enregistrement d’un ensemble de modifications apportées au projet.
+- **Branch (branche)** : Une version parallèle du code permettant de travailler sur des fonctionnalités sans impacter la version principale.
+- **Pull Request** : Une proposition de modification que vous soumettez pour être intégrée dans le dépôt principal.
+- **Fork** : Une copie d’un dépôt que vous pouvez modifier librement.
 
-### d. Pull Requests
+---
 
-Une **pull request** est une demande de fusion de modifications d’une branche vers une autre (souvent vers la branche principale). Cela permet de proposer des changements, de les discuter, et de les valider avant leur intégration définitive.
+## 4. Premiers pas : créer et cloner un dépôt
 
-## 3. Premiers pas sur GitHub
+1. **Créer un dépôt** : Sur votre tableau de bord, cliquez sur "New repository", donnez-lui un nom, une description, et choisissez si vous voulez le rendre public ou privé.
+2. **Cloner un dépôt** : Utilisez la commande `git clone [URL]` dans votre terminal pour obtenir une copie locale du dépôt.
 
-Voici les étapes de base pour démarrer :
+```bash
+git clone https://github.com/username/nom-du-repo.git
+```
 
-1. **Créer un compte GitHub** : Rendez-vous sur [github.com](https://github.com) et inscrivez-vous.
-2. **Créer un dépôt** : Cliquez sur « New repository », donnez un nom à votre projet et choisissez la visibilité.
-3. **Cloner le dépôt** : Pour travailler en local, utilisez la commande `git clone` suivie de l’URL du dépôt.
-4. **Faire des modifications** : Éditez vos fichiers, puis utilisez `git add` pour préparer les modifications, et `git commit` pour les enregistrer.
-5. **Pousser vos changements** : Envoyez vos commits sur GitHub avec `git push`.
-6. **Collaborer** : Créez des branches, ouvrez des pull requests, et discutez des changements avec vos collaborateurs.
+---
 
-## 4. Bonnes pratiques pour 2025
+## 5. Effectuer des modifications et les pousser
 
-- **Rédigez des messages de commit clairs et précis.**
-- **Utilisez les Issues** pour gérer les tâches, bugs et suggestions.
-- **Protégez la branche principale** en demandant des revues de code avant toute fusion.
-- **Automatisez les tests** avec des outils d’intégration continue (CI).
+Après avoir modifié des fichiers localement, utilisez :
+
+```bash
+git add .
+git commit -m "Votre message de commit"
+git push
+```
+
+- `git add .` prépare tous les fichiers modifiés.
+- `git commit -m` enregistre un instantané avec un message descriptif.
+- `git push` envoie vos modifications sur GitHub.
+
+---
+
+## 6. Collaborer grâce aux Pull Requests
+
+Pour contribuer à un projet, créez une branche, apportez vos modifications, puis ouvrez une *pull request*. Les autres membres du projet pourront alors revoir et fusionner vos changements.
+
+---
+
+## 7. Bonnes pratiques pour débuter
+
+- Rédigez des messages de commit clairs et concis.
+- Utilisez des branches pour développer des fonctionnalités ou corriger des bugs.
+- Consultez la documentation officielle de GitHub pour approfondir vos connaissances.
+
+---
 
 ## Conclusion
 
-Maîtriser les bases de GitHub ouvre la porte à la collaboration sur des projets ambitieux, que ce soit en équipe ou en open source. En 2025, l’utilisation de GitHub reste un standard incontournable dans le monde du développement logiciel. Prenez le temps de vous familiariser avec ces concepts, et lancez-vous dans vos premiers projets collaboratifs !
+Maîtriser les bases de GitHub en 2025 reste essentiel pour toute personne souhaitant s’impliquer dans le développement logiciel moderne. Avec ces premiers pas, vous êtes prêt à explorer davantage la plateforme et à rejoindre une vaste communauté de créateurs et de collaborateur·ices !
 
 ---
 
 **Ressources utiles :**
-- [Documentation officielle GitHub](https://docs.github.com/)
-- [Git - Le guide du débutant](https://git-scm.com/book/fr/v2)
+- [GitHub Documentation](https://docs.github.com/)
 - [GitHub Learning Lab](https://lab.github.com/)
+- [Introduction à Git et GitHub (OpenClassrooms)](https://openclassrooms.com/fr/courses/7162856-gerez-du-code-avec-git-et-github)
