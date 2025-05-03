@@ -47,7 +47,7 @@ jobs:
           for file in blog/*.md; do
             if [ -f "$file" ]; then
               echo "Traitement du fichier : $file"
-              node scripts/generateArticle.js "$file"
+              node scripts/generateArticleOui.js "$file"
             fi
           done
           
