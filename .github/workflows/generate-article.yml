@@ -1,5 +1,8 @@
 name: Génération Automatique d'Articles
 
+permissions:
+    contents: write
+
 on:
   pull_request:
     branches:
@@ -25,15 +28,28 @@ jobs:
         run: |
             npm install
       
+      - name: Vérifier le dossier blog
+        run: |
+          if [ ! -d "blog" ]; then
+            echo "Le dossier blog n'existe pas"
+            exit 1
+          fi
+          ls -la blog/
+      
       - name: Génération des articles
         id: generate
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          results=()
+          echo "Contenu du répertoire courant :"
+          ls -la
+          echo "Contenu du dossier blog :"
+          ls -la blog/
           node --trace-warnings scripts/generateArticle.js
           
-          echo "generated_files=${results[*]}" >> $GITHUB_OUTPUT
+          # Récupérer la liste des fichiers générés
+          generated_files=$(find blog -name "*.md" -type f)
+          echo "generated_files=${generated_files}" >> $GITHUB_OUTPUT
       
       - name: Commit et push des changements
         if: steps.generate.outputs.generated_files != ''
