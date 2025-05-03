@@ -38,19 +38,23 @@ jobs:
           echo "Contenu du dossier blog :"
           ls -la blog/
           
+          # Vérifier que la clé API est définie
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "La clé API OpenAI n'est pas définie"
+            exit 1
+          fi
+          
           # Trouver tous les fichiers .md dans le dossier blog
           for file in blog/*.md; do
             if [ -f "$file" ]; then
               echo "Traitement du fichier : $file"
-              node scripts/generateArticle.js "$file"
+              OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} node scripts/generateArticle.js "$file"
             fi
           done
           
           # Récupérer la liste des fichiers générés
           generated_files=$(find blog -name "*.md" -type f)
           echo "generated_files=${generated_files}" >> $GITHUB_OUTPUT
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       
       - name: Commit et push des changements
         if: steps.generate.outputs.generated_files != ''
