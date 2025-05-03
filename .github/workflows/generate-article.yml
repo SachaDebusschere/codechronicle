@@ -31,6 +31,8 @@ jobs:
       
       - name: Génération des articles
         id: generate
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           echo "Répertoire de travail : $(pwd)"
           echo "Contenu du répertoire courant :"
@@ -38,11 +40,14 @@ jobs:
           echo "Contenu du dossier blog :"
           ls -la blog/
           
+          # Vérifier que la clé API est bien présente
+          echo "Clé API (masquée) : ${OPENAI_API_KEY:0:4}****"
+          
           # Trouver tous les fichiers .md dans le dossier blog
           for file in blog/*.md; do
             if [ -f "$file" ]; then
               echo "Traitement du fichier : $file"
-              OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} node scripts/generateArticle.js "$file"
+              node scripts/generateArticle.js "$file"
             fi
           done
           
