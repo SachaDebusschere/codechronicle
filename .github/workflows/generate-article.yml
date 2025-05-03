@@ -40,23 +40,13 @@ jobs:
           echo "Contenu du dossier blog :"
           ls -la blog/
           
-          # Vérifier le contenu du script
-          echo "Contenu du script :"
-          cat scripts/generateArticle.js
-          
-          # Exécuter le script avec Node.js
-          node -e "
-            const fs = require('fs');
-            const path = require('path');
-            const blogDir = path.join(process.cwd(), 'blog');
-            console.log('Chemin du dossier blog:', blogDir);
-            console.log('Dossier blog existe:', fs.existsSync(blogDir));
-            const files = fs.readdirSync(blogDir);
-            console.log('Fichiers trouvés:', files);
-          "
-          
-          # Exécuter le script principal
-          node scripts/generateArticle.js
+          # Trouver tous les fichiers .md dans le dossier blog
+          for file in blog/*.md; do
+            if [ -f "$file" ]; then
+              echo "Traitement du fichier : $file"
+              node scripts/generateArticle.js "$file"
+            fi
+          done
           
           # Récupérer la liste des fichiers générés
           generated_files=$(find blog -name "*.md" -type f)
