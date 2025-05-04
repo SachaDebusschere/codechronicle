@@ -1,7 +1,6 @@
 # CodeChronicle 📝
 
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/SachaDebusschere/codechronicle/generate-article.yml?label=G%C3%A9n%C3%A9ration%20d%27Articles)
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/SachaDebusschere/codechronicle/pr-comment.yml?label=Commentaire%20PR)
 ![License](https://img.shields.io/badge/licence-MIT-blue)
 
 ## 🚀 Présentation
@@ -13,8 +12,7 @@ CodeChronicle est une solution DevOps complète qui automatise la création, la 
 - **Génération automatique d'articles**: Utilisation de l'API OpenAI pour générer du contenu de qualité
 - **Workflows GitHub Actions**: Automatisation de la génération d'articles et notifications
 - **Commentaires automatiques sur les PR**: Informations détaillées sur les articles générés
-- **Notifications Discord**: Alertes en temps réel lors des merges
-- **Site statique**: Transformation des fichiers markdown en HTML
+- **Notifications Discord**: Alertes en temps réel lors de la génération d'un article
 
 ## 🛠️ Architecture technique
 
@@ -24,17 +22,14 @@ Le projet utilise les technologies suivantes:
 - **GitHub Actions**: Pour l'automatisation des workflows
 - **API OpenAI**: Pour la génération de contenu IA
 - **Markdown**: Pour la structure des articles
-- **HTML/CSS**: Pour le site statique
 
 ## 🔄 Workflow
 
 1. Création d'un fichier markdown vide dans le dossier `blog/`
-2. Ouverture d'une Pull Request
-3. Génération automatique du contenu par l'IA
-4. Commentaire automatique sur la PR
-5. Merge de la PR vers `main`
-6. Notification Discord envoyée
-7. Déploiement manuel sur InfinityFree
+À l'ouverture d'une Pull Request :
+2. Génération automatique du contenu par l'IA
+3. Commentaire automatique sur la PR
+4. Notification Discord envoyée
 
 ## 📦 Installation
 
@@ -57,9 +52,11 @@ Pour créer un nouvel article:
 2. Poussez vers la branche main et ouvrez une PR
 3. GitHub Actions générera automatiquement le contenu
 4. Vérifiez le contenu généré et mergez la PR
+5. Badge mis à jour sur le Readme
 
 ## 🔗 Liens
 
-- [Blog en ligne (pas encore up)]()
 - [Documentation OpenAI](https://platform.openai.com/docs/introduction)
 - [GitHub Actions](https://docs.github.com/fr/actions)
+
+J'ai galéré de fou pour que ça fonctionne avec l'API et j'ai réussi hier mais j'ai pas la foi de finir l'exo, normalement j'ai tout jusque la notif discord au moins avec un git propre et sécurisé !
